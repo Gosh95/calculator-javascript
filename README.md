@@ -1,2 +1,2 @@
 # basic-calculator
- Create basic calculator with Javascript
+basic calculator with Javascript
