@@ -4,80 +4,99 @@ const signConverter = document.querySelector("#sign-converter");
 const dot = document.querySelector(".dot");
 const operators = document.querySelectorAll(".operators");
 const numbers = document.querySelectorAll(".numbers");
-const result = document.querySelectorAll(".result");
+const result = document.querySelector(".result");
 
-let aNum = "";
-let operator = "";
-let bNum = "";
+let aNum = "", haveAnum = false;
+let operator = "", haveOperator = false;
+let bNum = "", haveBnum = false;
 let calcResult = "";
-let haveOperator = false;
 
-function handleDotBtn(event) {
-    const dotSign = event.target.innerText;
-
+function handleDotBtn() {
     if(!haveOperator) {
-        if(aNum.indexOf(".") === -1 && aNum.length > 0) {
-            aNum += dotSign;
-            screen.innerText = numberWithCommas(aNum);
-        } 
+        aNum = addDotAndDisplay(aNum);
     } else {
-        if(bNum.indexOf(".") === -1 && bNum.length > 0) {
-            bNum += dotSign;
-            screen.innerText = numberWithCommas(bNum);
-        } 
+        bNum = addDotAndDisplay(bNum);
     }
+}
+
+function addDotAndDisplay(num) {
+    if(num.indexOf(".") === -1) {
+        if(num.length > 0) {
+            num += ".";
+            screen.innerText = numberWithCommas(num);
+        }
+    } 
+
+    return num;
 }
 
 function handleResetBtn() {
     aNum = "";
+    haveAnum = false;
     bNum = "";
+    haveBnum = false;
     operator = "";
-    calcResult = "";
     haveOperator = false;
-    screen.innerText = "0";
+    calcResult = "";
+    screen.innerText = "-";
 }
 
 function convertNumberSign() {
     const num = String(screen.innerText);
 
-    if(num === "0") {
+    if(num === "0" || num === "-") {
         return;
     }
 
     if(!haveOperator) {
-        if(aNum.startsWith("-")) {
-            aNum = aNum.substring(1, num.length);
-        } else {
-            aNum = `-${aNum}`;
-        }
+        aNum = addSign(aNum);
 
         screen.innerText = numberWithCommas(aNum);
     } else {
-        if(bNum.startsWith("-")) {
-            bNum = bNum.substring(1, bNum.length);
-        } else {
-            bNum = `-${bNum}`;
-        }
+        bNum = addSign(bNum);
 
-            screen.innerText = numberWithCommas(bNum);
+        screen.innerText = numberWithCommas(bNum);
+    }
+}
+
+function addSign(num) {
+    if(num.startsWith("-")) {
+        return num.substring(1, num.length);
+    } else {
+        return `-${num}`;
     }
 }
 
 function enterNumber(event) {
-    const inputNum = String(event.target.innerText);
-
-    if(screen.innerText === "0" && inputNum === "0") {
-        aNum = "0";
-        return;
-    }
+    const inputNum = event.target.innerText;
     
     if(!haveOperator) {
-        aNum += inputNum;
+        aNum = makeNumber(aNum, inputNum);
+
+        if(aNum != "") haveAnum = true;
+        
         screen.innerText = numberWithCommas(aNum);
     } else {
-        bNum += inputNum;
+        bNum = makeNumber(bNum, inputNum);
+
+        if(bNum != "") haveBnum = true;
+        
         screen.innerText = numberWithCommas(bNum);
     }
+}
+
+function makeNumber(num, input) {
+    num += input;
+
+    if(num.startsWith("0") && num.indexOf(".") === -1) {
+        if(input === "0") {
+            num = "0";
+        } else {
+            num = input;
+        }
+    }
+
+    return num;
 }
 
 //컴마 정규식
@@ -86,59 +105,64 @@ function numberWithCommas(num) {
 }
 
 function handleClickOperator(event) {
-    operator = String(event.target.innerText);
-
+    operator = event.target.innerText;
+    
     haveOperator = true;
+
+    doCalc();
 }
 
-function showCalcResult() {
+function handleClickResult() {
+    doCalc();
+
+    aNum = "";
+    haveOperator = false;
+}
+
+function doCalc() {
     let a = Number(aNum);
     let b = Number(bNum);
 
-    if(haveOperator && b.length != 0) {
+    if(haveAnum && haveOperator && haveBnum) {
         switch(operator) {
             case "÷" : 
                 calcResult = String(a / b);
                 break;
-
+    
             case "x" : 
                 calcResult = String(a * b);
                 break;
-
+    
             case "-" : 
                 calcResult = String(a - b);
                 break;
-
+    
             case "+" : 
                 calcResult = String(a + b);
                 break;
-
+    
             case "^" : 
                 calcResult = String(a ** b);
                 break;
-
+    
             default : 
                 return;
         }
 
         screen.innerText = numberWithCommas(calcResult);
-
-        aNum = calcResult;
+        aNum = screen.innerText;
         bNum = "";
-        haveOperator = false;
+        haveBnum = false;
     }
-
 }
 
 dot.addEventListener("click", handleDotBtn);
-result.forEach((sign) => {
-    sign.addEventListener("click", showCalcResult);
-})
+result.addEventListener("click", handleClickResult);
 operators.forEach((operator) => {
     operator.addEventListener("click", handleClickOperator);
-})
-numbers.forEach((number) => {
-    number.addEventListener("click", enterNumber);
 });
 signConverter.addEventListener("click", convertNumberSign);
 resetBtn.addEventListener("click", handleResetBtn);
+numbers.forEach((number) => {
+    number.addEventListener("click", enterNumber);
+});
